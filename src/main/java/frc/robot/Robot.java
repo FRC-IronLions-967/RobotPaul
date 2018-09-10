@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -39,10 +40,13 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    robotMap = new RobotMap();
     m_oi = new OI();
     // m_chooser.addDefault("Default Auto", new ExampleCommand());
     // chooser.addObject("My Auto", new MyAutoCommand());
     // SmartDashboard.putData("Auto mode", m_chooser);
+
+    CameraServer.getInstance().startAutomaticCapture();
   }
 
   /**
@@ -55,6 +59,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    log();
   }
 
   /**
@@ -131,5 +136,9 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
+  }
+
+  public void log(){
+    driveSubsystem.log();
   }
 }

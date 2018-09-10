@@ -3,13 +3,27 @@ package frc.robot.subsystems;
 import java.text.DecimalFormat;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import frc.robot.RobotConstraints;
 import frc.robot.RobotMap;
 
 
-public class DriveSubsystem extends Subsystem {
+public class DriveSubsystem extends Subsystem implements PIDOutput {
+
+	private AHRS navxgyro;
+	private PIDController pidTurnController;
+
+	public double PIDOutput;
+
+	static final double kP = RobotConstraints.DriveSubsystem_kP;
+	static final double kI = RobotConstraints.DriveSubsystem_kI;
+	static final double kD = RobotConstraints.DriveSubsystem_kD;
 
     static final double kToleranceDegrees = RobotConstraints.DriveSubsystem_kToleranceDegrees;
 
@@ -125,7 +139,7 @@ public class DriveSubsystem extends Subsystem {
 												,0.762129
 												,0.777924
 												,0.793881
-,0.81};
+												,0.81};
 
     public DriveSubsystem(){
 
@@ -151,6 +165,24 @@ public class DriveSubsystem extends Subsystem {
 		
 		driveRightFollow.follow(driveRightLead);
 		driveRightFollowTwo.follow(driveRightFollow);
+
+		try { 
+			navxgyro = new AHRS(SPI.Port.kMXP); // setting the navx to the mxp port 
+		} 
+		catch (RuntimeException ex )  // catching if an error was called.
+		{
+			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true); // sending a message to the driver station telling that the navx is not working.
+		}
+
+		navxgyro.zeroYaw();
+
+		pidTurnController = new PIDController(kP, kI, kD, navxgyro, this);
+		pidTurnController.disable();
+		pidTurnController.setInputRange(-180.0f, 180.0f);
+		pidTurnController.setOutputRange(-1.0, 1.0);
+		pidTurnController.setAbsoluteTolerance(kToleranceDegrees);
+		pidTurnController.setContinuous(true); 
+
     }
 
     public void tankDrive(double left, double right) {
@@ -196,15 +228,55 @@ public class DriveSubsystem extends Subsystem {
     		move(L/max, R/max);
     }
 
-    public void move(double leftPower, double rightPower){
+    public void move(double leftPower, double rightPower) {
         driveLeftLead.set(leftPower);
         driveRightLead.set(rightPower);
     }
 
+	public void pidTurnControllerChangeState(String state) {
+		if (state == "Enable") {
+    		pidTurnController.enable();
+    	}
+    	else if (state == "Disable") {
+			pidTurnController.disable();
+		}
+	}
+
+	public void pidSetPoint(double input){
+		pidTurnController.setSetpoint(input);
+	}
+
+	public boolean pidDone() {
+    	if(Math.abs(Math.abs(pidTurnController.getSetpoint()) - Math.abs(navxgyro.getYaw())) < 7){
+			return true;
+    	}
+    	else {
+    		return false;
+    	}
+}
+
+	public void pidWrite(double output) {
+    	if(pidTurnController.getDeltaSetpoint() < 0) {
+    		PIDOutput = output;
+    	}
+    	else {
+    		PIDOutput = -output;
+    	}
+	}
+
+	public double getYaw(){
+		return navxgyro.getYaw();
+    }
+    
+    public void gyroZero() {
+    	navxgyro.zeroYaw();
+}
+
     @Override
     public void initDefaultCommand() {
       // Set the default command for a subsystem here.
-      // setDefaultCommand(new MySpecialCommand());
+	  // setDefaultCommand(new MySpecialCommand());
+	  setDefaultCommand(new ArcadeDriveLookUp());
     }
 
     public void log() {
