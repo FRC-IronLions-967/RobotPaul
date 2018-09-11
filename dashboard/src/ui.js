@@ -11,7 +11,8 @@ let ui = {
         number: document.getElementById('gyro-number')
     },
     robotDiagram: {
-        arm: document.getElementById('robot-arm')
+        arm: document.getElementById('robot-arm'),
+        lift: document.getElementById('robot-lift')
     },
     example: {
         button: document.getElementById('example-button'),
