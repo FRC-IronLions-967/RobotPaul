@@ -232,24 +232,8 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     public void move(double leftPower, double rightPower) {
         driveLeftLead.set(leftPower);
         driveRightLead.set(rightPower);
-    }
-
-	public void PIDDrive(double yAxis, double xAxisCurve) {
-		double x = Math.abs(xAxisCurve);
-		//square the values for better control at low speeds
-		yAxis = yAxis*Math.abs(yAxis);
-		double xAxis = turnLookUp[(int)(Double.valueOf(df.format(x))*100)];
-		if(xAxisCurve > 0){
-			xAxis = -xAxis;
-		}
-		if((yAxis < deadBand) && (yAxis > -deadBand)){ yAxis=0;}
-		if((xAxis < deadBand) && (xAxis > -deadBand)){ xAxis=0;}
-		yAxis *= 2;
-		pidSetPoint(getYaw() + yAxis);
-		move(yAxis, yAxis);
 	}
-
-
+	
 	public void pidTurnControllerChangeState(String state) {
 		if (state == "Enable") {
     		pidTurnController.enable();
@@ -259,7 +243,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 		}
 	}
 
-	public void pidSetPoint(double input){
+	public void pidSetPoint(double input) {
 		pidTurnController.setSetpoint(input);
 	}
 
@@ -281,7 +265,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     	}
 	}
 
-	public double getYaw(){
+	public double getYaw() {
 		return navxgyro.getYaw();
     }
     
