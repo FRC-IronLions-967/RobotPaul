@@ -8,12 +8,12 @@ package frc.robot;
  */
 public class RobotMap {
   
-  public static int driveLeftLead = 0;
-  public static int driveLeftFollow = 1;
-  public static int driveLeftFollowTwo = 2;
+  public static int driveLeftMaster = 0;
+  public static int driveLeftFollowerA = 1;
+  public static int driveLeftFollowerB = 2;
   
-  public static int driveRightLead = 3;
-  public static int driveRightFollow = 4;
-  public static int driveRightFollowTwo = 5;
+  public static int driveRightMaster = 3;
+  public static int driveRightFollowerA = 4;
+  public static int driveRightFollowerB = 5;
   
 }

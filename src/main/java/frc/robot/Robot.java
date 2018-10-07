@@ -26,7 +26,7 @@ import frc.robot.subsystems.DriveSubsystem;
  */
 public class Robot extends TimedRobot {
   public static RobotMap robotMap;
-  public static RobotConstraints robotConstraints;
+  public static Constants Constants;
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   // public static ExampleSubsystem m_subsystem = new ExampleSubsystem();
   public static OI m_oi;

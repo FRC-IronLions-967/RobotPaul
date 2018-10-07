@@ -1,6 +1,6 @@
 package frc.robot;
 
-public class RobotConstraints {
+public class Constants {
 
     public static final double DriveSubsystem_deadBand = .15;
 	public static final double DriveSubsystem_kP = .017; 
@@ -8,5 +8,5 @@ public class RobotConstraints {
 	public static final double DriveSubsystem_kD = .02;
 	public static final double DriveSubsystem_kToleranceDegrees = 5.0f;    
 
-    public RobotConstraints() {};
+    public Constants() {};
 }

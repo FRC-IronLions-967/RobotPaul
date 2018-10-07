@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import frc.robot.RobotConstraints;
+import frc.robot.Constants;
 import frc.robot.RobotMap;
 import frc.robot.commands.ArcadeDriveLookUp;
 
@@ -22,21 +22,21 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 
 	public double PIDOutput;
 
-	static final double kP = RobotConstraints.DriveSubsystem_kP;
-	static final double kI = RobotConstraints.DriveSubsystem_kI;
-	static final double kD = RobotConstraints.DriveSubsystem_kD;
+	static final double kP = Constants.DriveSubsystem_kP;
+	static final double kI = Constants.DriveSubsystem_kI;
+	static final double kD = Constants.DriveSubsystem_kD;
 
-    static final double kToleranceDegrees = RobotConstraints.DriveSubsystem_kToleranceDegrees;
+    static final double kToleranceDegrees = Constants.DriveSubsystem_kToleranceDegrees;
 
-    private WPI_TalonSRX driveLeftLead;
-	private WPI_TalonSRX driveLeftFollow;
-	private WPI_TalonSRX driveLeftFollowTwo;
+    private WPI_TalonSRX driveLeftMaster;
+	private WPI_TalonSRX driveLeftFollowerA;
+	private WPI_TalonSRX driveLeftFollowerB;
 	
-	private WPI_TalonSRX driveRightLead;
-	private WPI_TalonSRX driveRightFollow;
-    private WPI_TalonSRX driveRightFollowTwo;
+	private WPI_TalonSRX driveRightMaster;
+	private WPI_TalonSRX driveRightFollowerA;
+    private WPI_TalonSRX driveRightFollowerB;
 
-	private static final double deadBand = RobotConstraints.DriveSubsystem_deadBand;
+	private static final double deadBand = Constants.DriveSubsystem_deadBand;
 
     private DecimalFormat df = new DecimalFormat("#.##");
 	//follows (x*.9)^2
@@ -144,28 +144,28 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 
     public DriveSubsystem(){
 
-        driveLeftLead = new WPI_TalonSRX(RobotMap.driveLeftLead);
-		driveLeftFollow = new WPI_TalonSRX(RobotMap.driveLeftFollow);
-		driveLeftFollowTwo = new WPI_TalonSRX(RobotMap.driveLeftFollowTwo);
-		driveRightLead = new WPI_TalonSRX(RobotMap.driveRightLead);
-		driveRightFollow = new WPI_TalonSRX(RobotMap.driveRightFollow);
-		driveRightFollowTwo = new WPI_TalonSRX(RobotMap.driveRightFollowTwo);
+        driveLeftMaster = new WPI_TalonSRX(RobotMap.driveLeftMaster);
+		driveLeftFollowerA = new WPI_TalonSRX(RobotMap.driveLeftFollowerA);
+		driveLeftFollowerB = new WPI_TalonSRX(RobotMap.driveLeftFollowerB);
+		driveRightMaster = new WPI_TalonSRX(RobotMap.driveRightMaster);
+		driveRightFollowerA = new WPI_TalonSRX(RobotMap.driveRightFollowerA);
+		driveRightFollowerB = new WPI_TalonSRX(RobotMap.driveRightFollowerB);
 		
-		driveLeftLead.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
-		driveLeftLead.setSensorPhase(true);
+		driveLeftMaster.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
+		driveLeftMaster.setSensorPhase(true);
 		
-		driveRightLead.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
-		driveRightLead.setSensorPhase(false);
+		driveRightMaster.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
+		driveRightMaster.setSensorPhase(false);
 		
-		driveRightLead.setInverted(true);
-		driveRightFollow.setInverted(true);
-		driveRightFollowTwo.setInverted(true);
+		driveRightMaster.setInverted(true);
+		driveRightFollowerA.setInverted(true);
+		driveRightFollowerB.setInverted(true);
 		
-		driveLeftFollow.follow(driveLeftLead);
-		driveLeftFollowTwo.follow(driveLeftFollow);
+		driveLeftFollowerA.follow(driveLeftMaster);
+		driveLeftFollowerB.follow(driveLeftMaster);
 		
-		driveRightFollow.follow(driveRightLead);
-		driveRightFollowTwo.follow(driveRightFollow);
+		driveRightFollowerA.follow(driveRightMaster);
+		driveRightFollowerB.follow(driveRightMaster);
 
 		try { 
 			navxgyro = new AHRS(SPI.Port.kMXP); // setting the navx to the mxp port 
@@ -230,8 +230,8 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     }
 
     public void move(double leftPower, double rightPower) {
-        driveLeftLead.set(leftPower);
-        driveRightLead.set(rightPower);
+        driveLeftMaster.set(leftPower);
+        driveRightMaster.set(rightPower);
 	}
 	
 	public void pidTurnControllerChangeState(String state) {
