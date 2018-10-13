@@ -3,107 +3,65 @@
 
 <head>
     <meta charset="utf-8">
-    <title>FRC 967</title>
+    <title>FRC Dashboard</title>
     <link href="css/style.css" rel="stylesheet">
-    <link href="css/ironlions.css" rel="stylesheet">
 </head>
 
 <body>
-    <header class="full">
-        <div class="parent-col">
-            <div class="col center-align">
-                <div id="timer">2:15</div>
-            </div>
-
-            <div class="col center-align">
-                <!-- Gyroscope -->
-                <svg id="gyro">
-                    <circle cx="50%" cy="50%" r="25%"></circle>
-                    <circle cx="50%" cy="50%" r="15%"></circle>
-                    <rect id="gyro-arm" x="48%" y="0%" width="4%" height="50%"></rect>
-                    <text id="gyro-number" x="50%" y="65%">0º</text>
-                </svg>
-            </div>
-        </div>
-
-        <div class="col right-align">
-            <div>
-                <!-- Autonomous selector -->
-                <span class="select-container">
-                    <b>Autonomous:</b>
-                    <select id="auto-select">
-                        <option>Loading...</option>
-                        <!-- This gets populated by JS -->
-                    </select>
-                </span>
-            </div>
-        </div>
+    <div id="timer">2:15</div>
+    <header>
+        <!-- Tells whether robot is connected to dashboard. -->
+        <div id="robot-state">Unknown state</div>
+        <button id="connect-button">Connect</button>
     </header>
-
-    <main class="full">
-        <div class="col">
-            <img src="http://roboRIO-967-FRC.local:1181/?action=stream" id="camera">
+    <!-- You'll need to mess around with the CSS of #camera (found in css/style.css) to get it to work.
+        More explanation in that CSS rule. -->
+    <div id="camera"></div>
+    <!-- The main body of the dashboard, by default contains the gyro monitor and the robot diagram -->
+    <article>
+        <!-- Gyroscope -->
+        <svg id="gyro">
+            <circle cx="85" cy="85" r="83"></circle>
+            <circle cx="85" cy="85" r="50"></circle>
+            <rect id="gyro-arm" x="80" y="5" width="10" height="80"></rect>
+            <text id="gyro-number" x="90" y="115">0º</text>
+        </svg>
+        <!-- Example robot diagram, arm moves when encoder value changes -->
+        <svg id="robot-diagram" width="332" height="450">
+            <text x="40" y="340">Example SVG Robot Diagram</text>
+            <rect x="75" y="360" width="230" height="40"></rect>
+            <rect x="85" y="370" width="210" height="40"></rect>
+            <rect id="robot-arm" x="5" y="375" width="80" height="10"></rect>
+            <circle cx="100" cy="410" r="25"></circle>
+            <circle cx="260" cy="410" r="25"></circle>
+            <rect x="60" y="380" width="250" height="30"></rect>
+            <text id="team" x="185" y="405" text-anchor="middle">####</text>
+        </svg>
+    </article>
+    <!-- The sidebar of the dashboard. Designed for smaller control elements like selection boxes and small buttons. -->
+    <aside>
+        <!-- Example button which toggles /SmartDashboard/exampleValue NetworkTables value.
+            The <p> below then says the value. -->
+        <div id="example-section">
+            <button id="example-button">Change example value</button>
+            <p id="example-readout">Value is undefined</p>
         </div>
-
-        <div class="parent-col">
-            <div class="col center-align">
-                <!-- YET TO IMPLEMENT: elevator moves up and down -->
-                <svg id="robot-diagram" width="100%" height="70%">
-                    <rect id="robot-elevator-top" x="36%" y="10%" width="2%" height="30%"></rect>
-                    <rect id="robot-elevator-bottom" x="35%" y="40%" width="4%" height="30%"></rect>
-                    <rect id="robot-elevator-top-2" x="32%" y="10%" width="7%" height="2%"></rect>
-                    
-                    <rect x="25%" y="70%" width="50%" height="10%"></rect>
-                    <rect x="20%" y="74%" width="60%" height="10%"></rect>
-
-                    <circle cx="33%" cy="83%" r="5%"></circle>
-                    <circle cx="49.5%" cy="83%" r="5%"></circle>
-                    <circle cx="66%" cy="83%" r="5%"></circle>
-                    
-                    <text id="team" x="57%" y="50%" text-anchor="middle">967</text>
-                </svg>
-
-                <h2>ELEVATOR EXTENSION:</h2>
-                <h1 class="readout superbig" i="elevator-powa">100%</h1>
-            </div>
-
-            <div class="col" style="padding-right: 0px;">
-                <div id="status-bar">
-                    <h1>ROBOT STATUS</h1>
-                    <hr>
-
-                    <div>
-                        <b class="label-block">Connection:</b>
-                        <span class="readout" id="robot-state">Not Connected</span>
-                    </div>
-
-                    <div>
-                        <b class="label-block">Left Drive:</b>
-                        <!--<span class="readout" id="left-drive-powa">Not Enabled</span>-->
-                        <meter id="left-drive-powa" min="-100" max="100" value="0"></meter>
-                    </div>
-        
-                    <div>
-                        <b class="label-block">Right Drive:</b>
-                        <span class="readout" id="right-drive-powa">Not Enabled</span>
-                    </div>
-                    
-                    <!--<div>
-                        <b class="label-block">Gyro:</b>
-                        <span class="readout" id="gyro-connection"> </span>
-                    </div>-->
-                </div>
-            </div>
+        <!-- Autonomous selector -->
+        <div class="select-container">
+            <select id="auto-select">
+                <option>No auto modes found</option>
+                <!-- This gets populated by JS -->
+            </select>
         </div>
-    </main>
-
-    <div class="greybox">
-        <div id="login">
-            <input id="connect-address" type="text" value="10.9.67.2" disabled>
-            <button id="connect" disabled>Connecting</button>
+        <div>
+            <p>Adjust arm height</p>
+            <input id="arm-position" type="range" min="0" max="1200" value="770">
         </div>
+    </aside>
+    <div id="login">
+        <input id="connect-address" type="text" value="localhost" disabled>
+        <button id="connect" disabled>Connecting</button>
     </div>
-
     <script src="networktables/networktables.js"></script>
     <script src="connection.js"></script>
     <script src="ui.js"></script>

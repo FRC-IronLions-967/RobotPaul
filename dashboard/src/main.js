@@ -5,6 +5,12 @@ const electron = require('electron');
 const wpilib_NT = require('wpilib-nt-client');
 const client = new wpilib_NT.Client();
 
+// The client will try to reconnect after 1 second
+client.setReconnectDelay(1000)
+
+/** Module to control application life. */
+const app = electron.app;
+
 /** Module to create native browser window.*/
 const BrowserWindow = electron.BrowserWindow;
 
@@ -19,7 +25,7 @@ const ipc = electron.ipcMain;
  * */
 let mainWindow;
 
-let connected,
+let connectedFunc,
     ready = false;
 
 let clientDataListener = (key, val, valType, mesgType, id, flags) => {
@@ -34,8 +40,6 @@ let clientDataListener = (key, val, valType, mesgType, id, flags) => {
         flags
     });
 };
-
-// This function creates the display window
 function createWindow() {
     // Attempt to connect to the localhost
     client.start((con, err) => {
@@ -45,26 +49,33 @@ function createWindow() {
             mainWindow.webContents.send('connected', con);
 
             // Listens to the changes coming from the client
-            client.addListener(clientDataListener);
         };
-        
-        // If the Window is ready then send the connection status to it
+
+        // If the Window is ready than send the connection status to it
         if (ready) {
             connectFunc();
-        } else connected = connectFunc;
+        }
+        connectedFunc = connectFunc;
     });
     // When the script starts running in the window set the ready variable
     ipc.on('ready', (ev, mesg) => {
         console.log('NetworkTables is ready');
         ready = mainWindow != null;
+
+        // Remove old Listener
+        client.removeListener(clientDataListener);
+
+        // Add new listener with immediate callback
+        client.addListener(clientDataListener, true);
+
         // Send connection message to the window if if the message is ready
-        if (connected) connected();
-        connected = null;
+        if (connectedFunc) connectedFunc();
     });
-    // When the user chooses the address of the bot then try to connect
+    // When the user chooses the address of the bot than try to connect
     ipc.on('connect', (ev, address, port) => {
         console.log(`Trying to connect to ${address}` + (port ? ':' + port : ''));
         let callback = (connected, err) => {
+            console.log('Sending status');
             mainWindow.webContents.send('connected', connected);
         };
         if (port) {
@@ -79,18 +90,19 @@ function createWindow() {
     ipc.on('update', (ev, mesg) => {
         client.Update(mesg.id, mesg.val);
     });
-    ipc.on('error', (ev, error) => {
+    ipc.on('windowError', (ev, error) => {
         console.log(error);
     });
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        // Size to take up as much space as possible
-        // without covering driver station
-        width: 1920,
-        height: 756,
-        show: false
+        width: 1366,
+        height: 570,
+        // 1366x570 is a good standard height, but you may want to change this to fit your DriverStation's screen better.
+        // It's best if the dashboard takes up as much space as possible without covering the DriverStation application.
+        // The window is closed until the python server is ready
+        show: false,
+        icon: __dirname + '/../images/icon.png'
     });
-    
     // Move window to top (left) of screen.
     mainWindow.setPosition(0, 0);
     // Load window.
@@ -102,7 +114,7 @@ function createWindow() {
     });
 
     // Remove menu
-    mainWindow.setMenu(null);
+    //mainWindow.setMenu(null);
     // Emitted when the window is closed.
     mainWindow.on('closed', () => {
         console.log('main window closed');
@@ -111,6 +123,7 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null;
         ready = false;
+        connectedFunc = null;
         client.removeListener(clientDataListener);
     });
     mainWindow.on('unresponsive', () => {
@@ -120,10 +133,6 @@ function createWindow() {
         console.log('window failed load');
     });
 }
-
-/** Module to control application life. */
-const app = electron.app;
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', () => {
@@ -132,7 +141,7 @@ app.on('ready', () => {
 });
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function() {
+app.on('window-all-closed', function () {
     // On OS X it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q.
     // Not like we're creating a consumer application though.
@@ -143,11 +152,11 @@ app.on('window-all-closed', function() {
     app.quit();
 });
 
-app.on('quit', function() {
+app.on('quit', function () {
     console.log('Application quit.');
 });
 
-app.on('activate', function() {
+app.on('activate', function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (mainWindow == null) createWindow();
