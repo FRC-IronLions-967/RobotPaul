@@ -10,7 +10,6 @@ import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
 import com.ctre.phoenix.motorcontrol.SensorTerm;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -24,6 +23,7 @@ import frc.robot.commands.ArcadeDriveLookUp;
 
 
 public class DriveSubsystem extends Subsystem implements PIDOutput {
+
 
 	private AHRS navxgyro;
 	private PIDController pidTurnController;
@@ -43,6 +43,9 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 	private TalonSRX driveRightMaster;
 	private TalonSRX driveRightFollowerA;
     private TalonSRX driveRightFollowerB;
+
+	// Tracking varables
+	private boolean motionMagicFirstCall = false;
 
 	private static final double deadBand = Constants.DriveSubsystem_deadBand;
 
@@ -265,6 +268,9 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     }
 
     public void tankDrive(double left, double right) {
+		left = Deadband(left);
+		right = Deadband(right);
+
     	left = left*Math.abs(left);
     	right = right*Math.abs(right);
     	move(left,right);
@@ -275,8 +281,9 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     	yAxis = yAxis*Math.abs(yAxis);
     	xAxis = xAxis*Math.abs(xAxis);
     
-    	if((yAxis< deadBand) && (yAxis > -deadBand)){ yAxis=0;}
-    	if((xAxis< deadBand) && (xAxis > -deadBand)){ xAxis=0;}
+		yAxis = Deadband(yAxis);
+		xAxis = Deadband(xAxis);
+
     	double L = yAxis + xAxis;
     	double R = yAxis - xAxis;
     	double max = Math.abs(L);
@@ -295,8 +302,10 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 		if(xAxisCurve > 0){
 			xAxis = -xAxis;
 		}
-		if((yAxis < deadBand) && (yAxis > -deadBand)){ yAxis=0;}
-    	if((xAxis < deadBand) && (xAxis > -deadBand)){ xAxis=0;}
+
+		yAxis = Deadband(yAxis);
+		xAxis = Deadband(xAxis);
+
     	double L = yAxis + xAxis;
     	double R = yAxis - xAxis;
     	double max = Math.abs(L);
@@ -313,9 +322,14 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 	}
 
 	public void motionMagic(double forward, double turn) {
-		/* Determine which slot affects which PID */
-		driveRightMaster.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
+		if (motionMagicFirstCall) {
+			System.out.println("This is Motion Magic");
+			zeroEncoders();
 
+			/* Determine which slot affects which PID */
+			driveRightMaster.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
+		}
+	
 		/* calculate targets from gamepad inputs */
 		double target_sensorUnits = forward * Constants.kSensorUnitsPerRotation * Constants.kRotationsToTravel;
 		double feedFwdTerm = turn * 0.25; /* how much to add to the close loop output */
@@ -323,6 +337,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 		driveRightMaster.set(ControlMode.MotionMagic, target_sensorUnits, DemandType.ArbitraryFeedForward, feedFwdTerm);
 		driveLeftMaster.follow(driveRightMaster);
 
+		motionMagicFirstCall = false;
 	}
 	
 	public void pidTurnControllerChangeState(String state) {
@@ -368,6 +383,20 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 		driveRightMaster.getSensorCollection().setQuadraturePosition(0, Constants.kTimeoutMs);
 		driveLeftMaster.getSensorCollection().setQuadraturePosition(0 , Constants.kTimeoutMs);
 		System.out.println("[QuadEncoders] Zeroed. \n");	
+	}
+
+	double Deadband(double value) {
+		/* Upper deadband */
+		if (value >= +Constants.DriveSubsystem_deadBand) {
+			return value;
+		}
+		/* Lower Deadband */
+		if (value <= -Constants.DriveSubsystem_deadBand) {
+			return value;
+		}
+
+		/* Outside deadband*/
+		return 0;
 	}
 
     @Override
