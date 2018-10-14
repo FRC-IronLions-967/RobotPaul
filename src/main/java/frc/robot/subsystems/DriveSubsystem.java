@@ -2,6 +2,14 @@ package frc.robot.subsystems;
 
 import java.text.DecimalFormat;
 
+import com.ctre.phoenix.ParamEnum;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
+import com.ctre.phoenix.motorcontrol.SensorTerm;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -28,13 +36,13 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 
     static final double kToleranceDegrees = Constants.DriveSubsystem_kToleranceDegrees;
 
-    private WPI_TalonSRX driveLeftMaster;
-	private WPI_TalonSRX driveLeftFollowerA;
-	private WPI_TalonSRX driveLeftFollowerB;
+    private TalonSRX driveLeftMaster;
+	private TalonSRX driveLeftFollowerA;
+	private TalonSRX driveLeftFollowerB;
 	
-	private WPI_TalonSRX driveRightMaster;
-	private WPI_TalonSRX driveRightFollowerA;
-    private WPI_TalonSRX driveRightFollowerB;
+	private TalonSRX driveRightMaster;
+	private TalonSRX driveRightFollowerA;
+    private TalonSRX driveRightFollowerB;
 
 	private static final double deadBand = Constants.DriveSubsystem_deadBand;
 
@@ -144,28 +152,96 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 
     public DriveSubsystem(){
 
-        driveLeftMaster = new WPI_TalonSRX(RobotMap.driveLeftMaster);
-		driveLeftFollowerA = new WPI_TalonSRX(RobotMap.driveLeftFollowerA);
-		driveLeftFollowerB = new WPI_TalonSRX(RobotMap.driveLeftFollowerB);
-		driveRightMaster = new WPI_TalonSRX(RobotMap.driveRightMaster);
-		driveRightFollowerA = new WPI_TalonSRX(RobotMap.driveRightFollowerA);
-		driveRightFollowerB = new WPI_TalonSRX(RobotMap.driveRightFollowerB);
+        driveLeftMaster = new TalonSRX(RobotMap.driveLeftMaster);
+		driveLeftFollowerA = new TalonSRX(RobotMap.driveLeftFollowerA);
+		driveLeftFollowerB = new TalonSRX(RobotMap.driveLeftFollowerB);
+		driveRightMaster = new TalonSRX(RobotMap.driveRightMaster);
+		driveRightFollowerA = new TalonSRX(RobotMap.driveRightFollowerA);
+		driveRightFollowerB = new TalonSRX(RobotMap.driveRightFollowerB);
 		
-		driveLeftMaster.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
-		driveLeftMaster.setSensorPhase(true);
+		/** Feedback Sensor Configuration */
 		
-		driveRightMaster.configSelectedFeedbackSensor(com.ctre.phoenix.motorcontrol.FeedbackDevice.QuadEncoder, 0, 0);
-		driveRightMaster.setSensorPhase(false);
-		
-		driveRightMaster.setInverted(true);
-		driveRightFollowerA.setInverted(true);
-		driveRightFollowerB.setInverted(true);
+		/* Configure the left Talon's selected sensor to a QuadEncoder*/
+		driveLeftMaster.configSelectedFeedbackSensor(	FeedbackDevice.QuadEncoder,					// Local Feedback Source
+														Constants.PID_PRIMARY,						// PID Slot for Source [0, 1]
+														Constants.kTimeoutMs);						// Configuration Timeout
+
+		/* Configure the Remote Talon's selected sensor as a remote sensor for the right Talon */
+		driveRightMaster.configRemoteFeedbackFilter(	driveLeftMaster.getDeviceID(),				// Device ID of Source
+														RemoteSensorSource.TalonSRX_SelectedSensor,	// Remote Feedback Source
+														Constants.REMOTE_0,							// Source number [0, 1]
+														Constants.kTimeoutMs);						// Configuration Timeout
+
+														/* Setup Sum signal to be used for Distance */
+		driveRightMaster.configSensorTerm(SensorTerm.Sum0, FeedbackDevice.RemoteSensor0, Constants.kTimeoutMs);				// Feedback Device of Remote Talon
+		driveRightMaster.configSensorTerm(SensorTerm.Sum1, FeedbackDevice.CTRE_MagEncoder_Relative, Constants.kTimeoutMs);	// Quadrature Encoder of current Talon
+
+		/* Configure Sum [Sum of both QuadEncoders] to be used for Primary PID Index */
+		driveRightMaster.configSelectedFeedbackSensor(	FeedbackDevice.SensorSum, 
+														Constants.PID_PRIMARY,
+														Constants.kTimeoutMs);
+
+		/* Scale Feedback by 0.5 to half the sum of Distance */
+		driveRightMaster.configSelectedFeedbackCoefficient(	0.5, 						// Coefficient
+															Constants.PID_PRIMARY,		// PID Slot of Source 
+															Constants.kTimeoutMs);		// Configuration Timeout
+
+		/* Configure output and sensor direction */
+		driveRightMaster.setSensorPhase(true);
+		driveLeftMaster.setInverted(true);
+		driveLeftFollowerA.setInverted(true);
+		driveLeftFollowerB.setInverted(true);
 		
 		driveLeftFollowerA.follow(driveLeftMaster);
 		driveLeftFollowerB.follow(driveLeftMaster);
 		
 		driveRightFollowerA.follow(driveRightMaster);
 		driveRightFollowerB.follow(driveRightMaster);
+
+		/* Set status frame periods to ensure we don't have stale data */
+		driveRightMaster.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, Constants.kTimeoutMs);
+		driveRightMaster.setStatusFramePeriod(StatusFrame.Status_13_Base_PIDF0, 20, Constants.kTimeoutMs);
+		driveLeftMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, Constants.kTimeoutMs);
+
+		/* Configure neutral deadband */
+		driveRightMaster.configNeutralDeadband(Constants.kNeutralDeadband, Constants.kTimeoutMs);
+		driveLeftMaster.configNeutralDeadband(Constants.kNeutralDeadband, Constants.kTimeoutMs);
+		
+		/* Motion Magic Configurations */
+		driveRightMaster.configMotionAcceleration(1000, Constants.kTimeoutMs); //changed from 2000
+		driveRightMaster.configMotionCruiseVelocity(2000, Constants.kTimeoutMs); // changed from 2000
+
+		/* Max out the peak output (for all modes).  
+		 * However you can limit the output of a given PID object with configClosedLoopPeakOutput().
+		 */
+		driveLeftMaster.configPeakOutputForward(+1.0, Constants.kTimeoutMs);
+		driveLeftMaster.configPeakOutputReverse(-1.0, Constants.kTimeoutMs);
+		driveRightMaster.configPeakOutputForward(+1.0, Constants.kTimeoutMs);
+		driveRightMaster.configPeakOutputReverse(-1.0, Constants.kTimeoutMs);
+
+		/* FPID Gains for Motion Magic servo */
+		driveRightMaster.config_kP(Constants.kSlot_Distanc, Constants.kGains_Distanc.kP, Constants.kTimeoutMs);
+		driveRightMaster.config_kI(Constants.kSlot_Distanc, Constants.kGains_Distanc.kI, Constants.kTimeoutMs);
+		driveRightMaster.config_kD(Constants.kSlot_Distanc, Constants.kGains_Distanc.kD, Constants.kTimeoutMs);
+		driveRightMaster.config_kF(Constants.kSlot_Distanc, Constants.kGains_Distanc.kF, Constants.kTimeoutMs);
+		driveRightMaster.config_IntegralZone(Constants.kSlot_Distanc, (int)Constants.kGains_Distanc.kIzone, Constants.kTimeoutMs);
+		driveRightMaster.configClosedLoopPeakOutput(Constants.kSlot_Distanc, Constants.kGains_Distanc.kPeakOutput, Constants.kTimeoutMs);
+			
+		/* 1ms per loop.  PID loop can be slowed down if need be.
+		 * For example,
+		 * - if sensor updates are too slow
+		 * - sensor deltas are very small per update, so derivative error never gets large enough to be useful.
+		 * - sensor movement is very slow causing the derivative error to be near zero.
+		 */
+		int closedLoopTimeMs = 1;
+		driveRightMaster.configSetParameter(ParamEnum.ePIDLoopPeriod, closedLoopTimeMs, 0x00, 0, Constants.kTimeoutMs);
+		driveRightMaster.configSetParameter(ParamEnum.ePIDLoopPeriod, closedLoopTimeMs, 0x00, 1, Constants.kTimeoutMs);
+
+		/* configAuxPIDPolarity(boolean invert, int timeoutMs)
+		 * false means talon's local output is PID0 + PID1, and other side Talon is PID0 - PID1
+		 * true means talon's local output is PID0 - PID1, and other side Talon is PID0 + PID1
+		 */
+		driveRightMaster.configAuxPIDPolarity(false, Constants.kTimeoutMs);
 
 		try { 
 			navxgyro = new AHRS(SPI.Port.kMXP); // setting the navx to the mxp port 
@@ -176,6 +252,8 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 		}
 
 		navxgyro.zeroYaw();
+
+		zeroEncoders();
 
 		pidTurnController = new PIDController(kP, kI, kD, navxgyro, this);
 		pidTurnController.disable();
@@ -230,8 +308,21 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     }
 
     public void move(double leftPower, double rightPower) {
-        driveLeftMaster.set(leftPower);
-        driveRightMaster.set(rightPower);
+        driveLeftMaster.set(ControlMode.PercentOutput, leftPower);
+        driveRightMaster.set(ControlMode.PercentOutput, rightPower);
+	}
+
+	public void motionMagic(double forward, double turn) {
+		/* Determine which slot affects which PID */
+		driveRightMaster.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
+
+		/* calculate targets from gamepad inputs */
+		double target_sensorUnits = forward * Constants.kSensorUnitsPerRotation * Constants.kRotationsToTravel;
+		double feedFwdTerm = turn * 0.25; /* how much to add to the close loop output */
+		
+		driveRightMaster.set(ControlMode.MotionMagic, target_sensorUnits, DemandType.ArbitraryFeedForward, feedFwdTerm);
+		driveLeftMaster.follow(driveRightMaster);
+
 	}
 	
 	public void pidTurnControllerChangeState(String state) {
@@ -271,7 +362,13 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     
     public void gyroZero() {
     	navxgyro.zeroYaw();
-}
+	}
+
+	public void zeroEncoders(){
+		driveRightMaster.getSensorCollection().setQuadraturePosition(0, Constants.kTimeoutMs);
+		driveLeftMaster.getSensorCollection().setQuadraturePosition(0 , Constants.kTimeoutMs);
+		System.out.println("[QuadEncoders] Zeroed. \n");	
+	}
 
     @Override
     public void initDefaultCommand() {

@@ -78,8 +78,8 @@ public class OI {
     xbox0povNW.whenPressed(new GyroPIDTurnToAngle(-45));
     // xbox0_lT.whenPressed(new ExampleCommand());
     // xbox0_rT.whenPressed(new ExampleCommand());
-   	xbox0_a.whenPressed(new GyroPIDChangeState("enable"));
-    xbox0_b.whenPressed(new ExampleCommand());
+    xbox0_a.whenPressed(new MotionMagicMove(10000));
+    xbox0_b.whenPressed(new ArcadeDriveLookUp());
     xbox0_x.whenPressed(new ExampleCommand());
     xbox0_y.whenPressed(new ExampleCommand());
     xbox0_lb.whenPressed(new ExampleCommand());
@@ -99,8 +99,8 @@ public class OI {
     xbox1povNW.whenPressed(new ExampleCommand());
     // xbox1_lT.whenPressed(new ExampleCommand());
     // xbox1_rT.whenPressed(new ExampleCommand());
-   	xbox1_a.whenPressed(new ExampleCommand());
-    xbox1_b.whenPressed(new ExampleCommand());
+   	// xbox1_a.whenPressed(new MotionMagicMove());
+    // xbox1_b.whenPressed(new ArcadeDriveLookUp());
     xbox1_x.whenPressed(new ExampleCommand());
     xbox1_y.whenPressed(new ExampleCommand());
     xbox1_lb.whenPressed(new ExampleCommand());
