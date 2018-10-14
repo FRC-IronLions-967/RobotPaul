@@ -1,7 +1,10 @@
 package frc.robot;
 
 public class Constants {
-
+	
+	/*
+	 *  Defining DriveSubsystem constraints
+	 */
     public static final double DriveSubsystem_deadBand = .05;
 	public static final double DriveSubsystem_kP = .017; 
 	public static final double DriveSubsystem_kI = 0;
