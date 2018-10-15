@@ -256,7 +256,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 
 		navxgyro.zeroYaw();
 
-		zeroEncoders();
+		zeroDriveEncoders();
 
 		pidTurnController = new PIDController(kP, kI, kD, navxgyro, this);
 		pidTurnController.disable();
@@ -324,7 +324,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
 	public void motionMagic(double forward, double turn) {
 		if (motionMagicFirstCall) {
 			System.out.println("This is Motion Magic");
-			zeroEncoders();
+			zeroDriveEncoders();
 
 			/* Determine which slot affects which PID */
 			driveRightMaster.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
@@ -379,7 +379,7 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     	navxgyro.zeroYaw();
 	}
 
-	public void zeroEncoders(){
+	public void zeroDriveEncoders(){
 		driveRightMaster.getSensorCollection().setQuadraturePosition(0, Constants.kTimeoutMs);
 		driveLeftMaster.getSensorCollection().setQuadraturePosition(0 , Constants.kTimeoutMs);
 		System.out.println("[QuadEncoders] Zeroed. \n");	
