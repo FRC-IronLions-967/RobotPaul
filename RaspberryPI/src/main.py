@@ -1,4 +1,4 @@
-# File Automaticly gets called by the startup processes on the raspberry pi
+# File Automaticly gets called by the startup processes on the raspberry pi from running on Boot
 
 import threading
 from networktables import NetworkTables
