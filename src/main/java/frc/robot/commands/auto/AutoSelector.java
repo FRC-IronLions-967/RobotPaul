@@ -27,7 +27,7 @@ public class AutoSelector extends CommandGroup {
    * 
    */
   public AutoSelector(String position) {
-    addSequential(new Start());
+    //saddSequential(new Start());
 
     // Geting the Driverstation Alliance
     // DriverStation.Alliance color;
