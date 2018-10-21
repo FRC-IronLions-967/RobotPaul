@@ -99,8 +99,8 @@ public class OI {
     xbox1povNW.whenPressed(new ExampleCommand());
     // xbox1_lT.whenPressed(new ExampleCommand());
     // xbox1_rT.whenPressed(new ExampleCommand());
-   	// xbox1_a.whenPressed(new MotionMagicMove());
-    // xbox1_b.whenPressed(new ArcadeDriveLookUp());
+   	xbox1_a.whenPressed(new ExampleCommand());
+    xbox1_b.whenPressed(new ExampleCommand());
     xbox1_x.whenPressed(new ExampleCommand());
     xbox1_y.whenPressed(new ExampleCommand());
     xbox1_lb.whenPressed(new ExampleCommand());
