@@ -13,7 +13,7 @@ def connectionListener(connected, info):
         cond.notify()
 
 def networkTablesConnect():
-    NetworkTables.initialize(server='10.xx.xx.2')
+    NetworkTables.initialize(server='10.9.67.2')
     NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
     with cond:
         print("Waiting for robot to connect")
