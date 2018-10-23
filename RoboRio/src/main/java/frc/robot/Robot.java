@@ -82,6 +82,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     log();
+    double logdata[] = {Timer.getFPGATimestamp(), 10*Timer.getFPGATimestamp(), 5};
+    SmartDashboard.putNumberArray("logger", logdata);
   }
   /**
    * This function is called once each time the robot enters Disabled mode.
