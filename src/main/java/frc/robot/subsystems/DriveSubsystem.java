@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.command.Subsystem;
 import frc.robot.RobotConstraints;
 import frc.robot.RobotMap;
 import frc.robot.commands.ArcadeDriveLookUp;
+import frc.robot.commands.TankDrive;
 
 
 public class DriveSubsystem extends Subsystem implements PIDOutput {
@@ -203,9 +204,9 @@ public class DriveSubsystem extends Subsystem implements PIDOutput {
     	double R = yAxis - xAxis;
     	double max = Math.abs(L);
     	if(Math.abs(R) > max) max = Math.abs(R);
-    	if((Math.abs(yAxis) <= 1) && (Math.abs(xAxis) <= 1) && (max < 1)){
-      	move(L,R);
-    	}else
+    	if((Math.abs(yAxis) <= 1) && (Math.abs(xAxis) <= 1) && (max < 1)) {
+      		move(L,R);
+    	} else
     		move(L/max, R/max);
     }
 

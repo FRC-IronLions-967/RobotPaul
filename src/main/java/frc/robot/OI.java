@@ -49,6 +49,7 @@ public class OI {
     JoystickButton xbox0_a = new JoystickButton(xbox0, 1);
     JoystickButton xbox0_b = new JoystickButton(xbox0, 2);
     JoystickButton xbox0_x = new JoystickButton(xbox0, 3);
+    
     JoystickButton xbox0_y = new JoystickButton(xbox0, 4);
     JoystickButton xbox0_lb = new JoystickButton(xbox0, 5);
     JoystickButton xbox0_rb = new JoystickButton(xbox0, 6);
