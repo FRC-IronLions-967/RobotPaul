@@ -79,8 +79,8 @@ public class OI {
     xbox0povNW.whenPressed(new GyroPIDTurnToAngle(-45));
     // xbox0_lT.whenPressed(new ExampleCommand());
     // xbox0_rT.whenPressed(new ExampleCommand());
-   	xbox0_a.whenPressed(new GyroPIDChangeState("enable"));
-    xbox0_b.whenPressed(new ExampleCommand());
+    xbox0_a.whenPressed(new MotionMagicMove(10000));
+    xbox0_b.whenPressed(new ArcadeDriveLookUp());
     xbox0_x.whenPressed(new ExampleCommand());
     xbox0_y.whenPressed(new ExampleCommand());
     xbox0_lb.whenPressed(new ExampleCommand());

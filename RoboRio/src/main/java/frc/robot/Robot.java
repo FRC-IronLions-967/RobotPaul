@@ -9,13 +9,16 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
-// import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
-// import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-// import frc.robot.commands.ExampleCommand;
-// import frc.robot.subsystems.ExampleSubsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.auto.AutoSelector;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.PowerSubsystem;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,15 +27,19 @@ import frc.robot.subsystems.DriveSubsystem;
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
+
 public class Robot extends TimedRobot {
   public static RobotMap robotMap;
-  public static RobotConstraints robotConstraints;
+  public static Constants Constants;
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
-  // public static ExampleSubsystem m_subsystem = new ExampleSubsystem();
+  public static PowerSubsystem powerSubsystem = new PowerSubsystem();
   public static OI m_oi;
-
-  // Command m_autonomousCommand;
-  // SendableChooser<Command> m_chooser = new SendableChooser<>();
+  
+  /*
+   *  Creating SendableChooser for Selecting what auto to run 
+   */
+  Command m_autonomousCommand;
+  SendableChooser<Command> m_chooser = new SendableChooser<>();
 
   /**
    * This function is run when the robot is first started up and should be
@@ -42,11 +49,26 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     robotMap = new RobotMap();
     m_oi = new OI();
-    // m_chooser.addDefault("Default Auto", new ExampleCommand());
-    // chooser.addObject("My Auto", new MyAutoCommand());
-    // SmartDashboard.putData("Auto mode", m_chooser);
+    /*
+     * Creating the auto Objects to choose from 
+     * Example command does not matter gets changed latter depending
+     * on if we start on the red side or the blue side 
+     */
+    m_chooser.addDefault("Default Auto (Drive Forward)", new ExampleCommand());
+    m_chooser.addObject("Position Left", new ExampleCommand());
+    m_chooser.addObject("Position Center", new ExampleCommand());
+    m_chooser.addObject("Position Right", new ExampleCommand());
+    
+
+    SmartDashboard.putData("Auto mode", m_chooser);
+
 
     CameraServer.getInstance().startAutomaticCapture();
+
+    /*
+     * Calling the start command group to run on the init of the robot 
+     * to set the robot into a known state where then our auto can go from 
+     */
   }
 
   /**
@@ -60,8 +82,9 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     log();
+    double logdata[] = {Timer.getFPGATimestamp(), 10*Timer.getFPGATimestamp(), 5};
+    SmartDashboard.putNumberArray("logger", logdata);
   }
-
   /**
    * This function is called once each time the robot enters Disabled mode.
    * You can use it to reset any subsystem information you want to clear when
@@ -89,19 +112,15 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    String autoCommand = SmartDashboard.getString("autonomous/selected", "Default Auto");
+    m_autonomousCommand = new AutoSelector(autoCommand);
+ 
     // m_autonomousCommand = m_chooser.getSelected();
 
-    /*
-     * String autoSelected = SmartDashboard.getString("Auto Selector",
-     * "Default"); switch(autoSelected) { case "My Auto": autonomousCommand
-     * = new MyAutoCommand(); break; case "Default Auto": default:
-     * autonomousCommand = new ExampleCommand(); break; }
-     */
-
     // schedule the autonomous command (example)
-    // if (m_autonomousCommand != null) {
-    //   m_autonomousCommand.start();
-    // }
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.start();
+    }
   }
 
   /**
@@ -135,10 +154,10 @@ public class Robot extends TimedRobot {
    * This function is called periodically during test mode.
    */
   @Override
-  public void testPeriodic() {
-  }
+  public void testPeriodic() {}
 
   public void log(){
     driveSubsystem.log();
+    powerSubsystem.log();
   }
 }
